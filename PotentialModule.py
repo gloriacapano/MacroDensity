@@ -164,15 +164,21 @@ def subs_potentials(A,B,tol):
     Returns:
 	C: a new aaray (2D)
     """
+    print "---------------------------------"
+    print "Subtracting potentials.          "
+    print "---------------------------------"
 
     C = A
+    run_sum = 0
     for i in range(len(A)):
     	C[i,0] = A[i,0]
-    	if abs(A[i,1] - B[i,1]) <= tol:
-            C[i,1] = 0
-    	else:
-            C[i,1] = A[i,1] - B[i,1]
+    	#if abs(A[i,1] - B[i,1]) <= tol:
+        #    C[i,1] = 0
+    	#else:
+        C[i,1] = A[i,1] - B[i,1]
+        run_sum = run_sum + (A[i,1] - B[i,1])
 
+    print "Sum from difference routine: ", run_sum
     return C
 
 #------------------------------------------------------------------------------------------
@@ -269,6 +275,43 @@ def c_spline_generate(A,new_res_factor):
 
     return B
 #------------------------------------------------------------------------------------------
+def matched_spline_generate(A,B):
+    """Make sure the limits of two sets of data are the same with a splining
+    Args:
+	A/B: 2D array
+    Returns:
+	C/D: A spline of the data
+    """
+    print "---------------------------------"
+    print "Matching limits of potentials"
+    print "---------------------------------"
+#   Decide which ranges to use
+    lower_b = max(min(A[:,0]),min(B[:,0]))
+    upper_b = min(max(A[:,0]),max(B[:,0]))
+    resolution = (A[len(A)-1,0]-A[0,0])/len(A)
+    array_a = np.arange(lower_b,upper_b,resolution)
+      
+
+
+
+    print "Generating function B."	
+    f_a = interpolate.interp1d(A[:,0],A[:,1],kind='cubic')
+    print "Generating function A."	
+    f_b = interpolate.interp1d(B[:,0],B[:,1],kind='cubic')
+    S = f_a(array_a)
+    K = f_b(array_a)
+    C = np.zeros(shape=(len(array_a),2))
+    D = np.zeros(shape=(len(array_a),2))
+    print "Splines generated, populating" 
+    for i in range(len(B)):
+    	C[i,0] = i*resolution+A[0,0]
+    	C[i,1] = S[i]
+    	D[i,0] = i*resolution+A[0,0]
+    	D[i,1] = K[i]
+    print "---------------------------------"
+
+    return C,D
+#------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
 def spline_generate(A,new_res_factor):
     """Generate a spline of the data in a 2D array
@@ -280,7 +323,9 @@ def spline_generate(A,new_res_factor):
     """
     resolution = (A[len(A)-1,0]-A[0,0])*new_res_factor/len(A)
     array_a = np.arange(min(A[:,0]),max(A[:,0]),resolution)
+    print "Generating function A."	
     f_a = interpolate.interp1d(A[:,0],A[:,1],kind='slinear')
+    print "Function generated."
     #ius = interpolate.InterpolatedUnivariateSpline(A[:,0],A[:,1])
     S = f_a(array_a)
     B = np.zeros(shape=(len(A)/new_res_factor,2))
@@ -291,7 +336,7 @@ def spline_generate(A,new_res_factor):
     return B
 #------------------------------------------------------------------------------------------
 
-def matched_spline_generate(A,B, V_A, V_B):
+def matched_2d_spline_generate(A,B, V_A, V_B):
     """Create 2D splines of 2 datasets, with an x-axis of units AA
     Args:
 	A/B: The two datasets to match up 1-D arrays.
@@ -479,28 +524,60 @@ def translate_grid(potential, translation, periodic=False, vector=[0,0,0],bounda
     return sorted_potential_trans
 
 #------------------------------------------------------------------------------------------
+def get_periodicity(A):
+    """Gets the periodicity of a 2D array
+    Args:
+	A : 2D array
+    Returns:
+	period : real number; abscissa periodicity
+    """
+
+    print "---------------------------------"
+    print "Finding periodicity routine"
+    print "---------------------------------"
+    minima = []
+    minima_abscissa = []
+    separation = []
+    for i in range(1,len(A)-1):
+	if A[i-1,1] < A[i,1] and A[i+1,1] < A[i,1]:
+   	    minima.append(round(A[i,1],4))
+	    minima_abscissa.append(A[i,0])
+    for i in range(len(minima)):
+	found_next = False
+	for j in range(i+1,len(minima)):
+		if minima[i] == minima[j] and found_next == False:
+		    found_next = True
+		    separation.append(minima_abscissa[j] - minima_abscissa[i])
+
+    period = numpy.average(separation)
+    return period
+#------------------------------------------------------------------------------------------
 
 def macroscopic_average(potential,periodicity,resolution):
     """Getting the macroscopic average of potential
     Args:
-         potential : array containig the electrostaticpotential/charge density
+         potential : 2D array containig the electrostaticpotential/charge density
 	 periodicity : real number; the period over which to average
 	 resolution : the grid resolution in the direction of averaging
     Returns:
 	 macro_average : array with the macroscopically averaged values"""
 
-    macro_average = np.zeros(shape=(len(potential)))
+    print "---------------------------------"
+    print "MacroScopic averaging routine    "
+    print "---------------------------------"
+    macro_average = np.zeros(shape=(len(potential),2))
     period_points = int((periodicity/resolution))
 # Re-arrange so that period points divides evenly by resolution
     for i in range(len(potential)):
 	for j in range(i-int(period_points/2),i+int(period_points/2)):
 	    if j < 0:
-	    	macro_average[i] = macro_average[i]+potential[j+len(potential)]
+	    	macro_average[i,1] = macro_average[i,1]+potential[j+len(potential),1]
 	    elif j >= len(potential):
-	    	macro_average[i] = macro_average[i]+potential[j-len(potential)]
+	    	macro_average[i,1] = macro_average[i,1]+potential[j-len(potential),1]
 	    else:
-	    	macro_average[i] = macro_average[i]+potential[j]
-	macro_average[i] = macro_average[i]/period_points
+	    	macro_average[i,1] = macro_average[i,1]+potential[j,1]
+	macro_average[i,1] = macro_average[i,1]/period_points
+	macro_average[i,0] = potential[i,0]
 
     print ("Average of the average = ",numpy.average(macro_average))
     return macro_average
@@ -783,4 +860,52 @@ def get_third_coordinate(plane_coeff,NGX,NGY):
 
     return zz
 	 
+#------------------------------------------------------------------------------------------
+def normalise_arrays(A,B):
+    """Given 2 arrays A and B which should have the same total, but have some small difference due to numerical errors this normalises each element of A so that the numbers should match
+    Args:
+	A/B: 2D arrays
+    Returns:
+	A/B: 2D arrays
+    """
+    print "---------------------------------"
+    print "Re-normalising arrays"
+    print "---------------------------------"
+# GET THE REQUIRED OFFSET
+    A_total = 0
+    B_total = 0
+    interval = (A[1,0] - A[0,0])
+    for element in A:
+        A_total = A_total + element[1]*interval
+    interval = B[1,0] - B[0,0]
+    for element in B:
+        B_total = B_total + element[1]*interval
+# RE-EVALUATE THE BULK ON THE BASIS OF THE DIFFERENCE
+    interval = A[1,0] - A[0,0]
+    differences = B_total - A_total
+    re_adjustment = differences/(len(A)*interval)
+    print "Required shift: ", differences
+    print "Shift per element: ", re_adjustment
+    for i in range(len(A)):
+        A[i,:] = A[i,:] + re_adjustment
+# TEST THE PROCEDURE
+    interval = (A[1,0] - A[0,0])
+    A_total = 0
+    B_total = 0
+    print "INTERVAL: ",interval
+    for element in A:
+        A_total = A_total + element[1]*interval
+    interval = B[1,0] - B[0,0]
+    print "INTERVAL: ",interval
+    for element in B:
+        B_total = B_total + element[1]*interval
+    if len(A) == len(B):
+	running_diff = 0
+        for i in range(len(A)):
+   	    running_diff = running_diff + A[i,1]-B[i,1]
+        print "Summed element differences: ", running_diff
+
+    print "Resulting difference: ",B_total - A_total
+
+    return A, B
 #------------------------------------------------------------------------------------------
