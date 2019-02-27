@@ -20,11 +20,5 @@ import math
 from scipy import interpolate
 from macrodensity import vasp_tools
 from macrodensity import plotting_tools
-<<<<<<< HEAD
-<<<<<<< HEAD
 from macrodensity import cp2k_tools
-=======
->>>>>>> 2939c7d56f6142cd96dff1328a8045be16e2a256
-=======
->>>>>>> 2939c7d56f6142cd96dff1328a8045be16e2a256
 from macrodensity.density_tools import *
