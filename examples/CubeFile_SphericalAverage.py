@@ -9,17 +9,14 @@ from macrodensity.cp2k_tools import read_cube_density
 input_file = '../../TEST.cube'
 cube_size = [2,2,2]    # This size is in units of mesh points
 ## origin defines the bottom left point of the cube the "0,0,0" point in fractional coordinates
-cube_origin = [0.5,0.5,0.5]
+cube_origin = [0,0,0]
 # No need to alter anything after here
 #------------------------------------------------------------------
 # Get the potential
 # This section should not be altered
 #------------------------------------------------------------------
 pot, NGX, NGY, NGZ, Lattice = read_cube_density(input_file)
-print(Lattice)
-print(NGX, NGY, NGZ)
 vector_a,vector_b,vector_c,av,bv,cv = md.matrix_2_abc(Lattice)
-print(vector_a,vector_b,vector_c,av,bv,cv)
 resolution_x = vector_a/NGX
 resolution_y = vector_b/NGY
 resolution_z = vector_c/NGZ
@@ -35,7 +32,7 @@ cube = cube_size
 origin = cube_origin
 ## travelled; do not alter this variable
 travelled = [0,0,0]
-## Uncomment the lines below to do the business
+## Uncomment the lines below to do the business 
 cube_potential, cube_var = md.cube_potential(origin,travelled,cube,grid_pot,NGX,NGY,NGZ)
 print "Potential            Variance"
 print "--------------------------------"
