@@ -20,5 +20,5 @@ import math
 from scipy import interpolate
 from macrodensity import vasp_tools
 from macrodensity import plotting_tools
-from macrodensity import cp2k_tools
+from macrodensity.cp2k_tools import *
 from macrodensity.density_tools import *

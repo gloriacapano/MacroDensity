@@ -511,6 +511,8 @@ def density_2_grid(Density, nx, ny, nz, Charge=False, Volume=1):
                 if Charge == True:
                     # Convert the charge density to a number of electrons
                     point_volume = Volume / (nx*ny*nz)
+                    print(point_volume)
+                    print(Volume)
                     Potential_grid[i,j,k] = Potential_grid[i,j,k]*point_volume
                 total_electrons = total_electrons + Density[l]
                 l = l + 1
