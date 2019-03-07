@@ -84,7 +84,7 @@ def density_grid_cube(Density, nx, ny, nz, Volume=1):
     for k in range(nz):
         for j in range(ny):
             for i in range(nx):
-                Potential_grid[i,j,k] = (Density[l] / Volume) * hartree2eV *(-1)
+                Potential_grid[i,j,k] = (Density[l] / Volume) * hartree2eV 
                 l = l + 1
     return Potential_grid
 
