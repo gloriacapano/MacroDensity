@@ -4,15 +4,7 @@ from itertools import chain
 import math
 
 
-def read_cube_density(FILE, use_pandas = None, quiet = False):
-    if use_pandas:
-        from pandas import read_table as pandas_read_table
-    elif use_pandas is None:
-        try:
-            from pandas import read_table as pandas_read_table
-            use_pandas = True
-        except ImportError:
-            use_pandas = False
+def read_cube_density(FILE, quiet = False):
 
     print("Reading cube file...")
     with open(FILE, "r") as f:
@@ -46,24 +38,11 @@ def read_cube_density(FILE, use_pandas = None, quiet = False):
             coord[i,1] = float(tmp[3])
             coord[i,2] = float(tmp[4])
 
-        if use_pandas:
-            print("Reading 3D data using Pandas...")
-            skiprows = 6 + num_atoms
-            readrows = int(math.ceil(NGX * NGY * NGZ / 6))
 
-            dat = pandas_read_table(FILE, delim_whitespace=True,
-                                    skiprows=skiprows, header=None,
-                                    nrows=readrows)
-            Potential = dat.iloc[:readrows, :6].values.flatten()
-            remainder = (NGX * NGY * NGZ) % 6
-            if remainder > 0:
-                Potential = Potential[:(-6 + remainder)]
-
-        else:
-            print("Reading 3D data...")
-            Potential = (f.readline().split()
-                             for i in range(int(math.ceil(NGX * NGY * NGZ / 6))))
-            Potential = np.fromiter(chain.from_iterable(Potential), float)
+        print("Reading 3D data...")
+        Potential = (f.readline().split()
+            for i in range((int(NGX/6) + (NGX%6 > 0)) * NGY *NGZ))
+        Potential = np.fromiter(chain.from_iterable(Potential), float)
 
     print("Average of the potential = ", np.average(Potential))
     return Potential, NGX, NGY, NGZ, lattice
