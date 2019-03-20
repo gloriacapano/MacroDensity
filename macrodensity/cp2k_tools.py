@@ -41,7 +41,7 @@ def read_cube_density(FILE, quiet = False):
 
         print("Reading 3D data...")
         Potential = (f.readline().split()
-            for i in range((int(NGX/6) + (NGX%6 > 0)) * NGY *NGZ))
+            for i in range((int(NGZ/6) + (NGZ%6 > 0)) * NGY *NGX))
         Potential = np.fromiter(chain.from_iterable(Potential), float)
 
     print("Average of the potential = ", np.average(Potential))
